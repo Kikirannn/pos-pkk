@@ -48,8 +48,10 @@ $(document).ready(function () {
         const url = isEdit ? `/inventory/products/${id}` : '/inventory/products';
 
         const formData = new FormData(this);
-        // Explicitly set checkbox value to 1 or 0 to satisfy Laravel 'boolean' validation
+        // Explicitly set checkbox value
         formData.set('is_available', $('#productAvailable').is(':checked') ? '1' : '0');
+        // Clean Price (remove dots)
+        formData.set('price', Utils.cleanNumber($('#productPrice').val()));
 
         // Laravel spoofing for PUT/PATCH with file upload
         if (isEdit) {
@@ -91,7 +93,7 @@ $(document).ready(function () {
         const data = {
             name: $('#toppingName').val(),
             category: $('#toppingCategory').val(),
-            price: $('#toppingPrice').val(),
+            price: Utils.cleanNumber($('#toppingPrice').val()),
             is_available: $('#toppingAvailable').is(':checked') ? 1 : 0
         };
 
@@ -124,7 +126,7 @@ $(document).ready(function () {
                 $('#productId').val(product.id);
                 $('#productName').val(product.name);
                 $('#productCategory').val(product.category);
-                $('#productPrice').val(product.price);
+                $('#productPrice').val(Utils.formatNumber(product.price));
                 $('#productDesc').val(product.description || '');
                 $('#productAvailable').prop('checked', product.is_available);
 
@@ -155,7 +157,7 @@ $(document).ready(function () {
                 $('#toppingId').val(topping.id);
                 $('#toppingName').val(topping.name);
                 $('#toppingCategory').val(topping.category);
-                $('#toppingPrice').val(topping.price);
+                $('#toppingPrice').val(Utils.formatNumber(topping.price));
                 $('#toppingAvailable').prop('checked', topping.is_available);
 
                 $('#toppingModalTitle').text('Edit Topping');

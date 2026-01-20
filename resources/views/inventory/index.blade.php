@@ -194,8 +194,8 @@
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label class="form-label">Harga (Rp)</label>
-                                    <input type="number" class="form-control" name="price" id="productPrice" min="0"
-                                        required>
+                                    <input type="text" class="form-control input-currency" name="price" id="productPrice"
+                                        placeholder="0" required>
                                 </div>
                             </div>
 
@@ -254,7 +254,7 @@
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label class="form-label">Harga Tambahan (Rp)</label>
-                                    <input type="number" class="form-control" name="price" id="toppingPrice" min="0"
+                                    <input type="text" class="form-control input-currency" name="price" id="toppingPrice" placeholder="0"
                                         required>
                                 </div>
                             </div>
