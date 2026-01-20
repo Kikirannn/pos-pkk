@@ -1,0 +1,239 @@
+/* ==========================================================================
+   1. CSS VARIABLES & CONFIG
+   ========================================================================== */
+   :root {
+    /* Colors */
+    --primary-color: #FF6B35;   /* Brand Orange */
+    --primary-hover: #e85a2d;
+    --secondary-color: #004E89; /* Brand Blue */
+    --success-color: #06D6A0;   /* Success Green */
+    --warning-color: #FFD166;   /* Warning Yellow */
+    --danger-color: #EF476F;    /* Danger Red/Pink */
+    --dark-color: #1A1A1D;      /* Text Dark */
+    --light-color: #F8F9FA;     /* Background Light */
+    --gray-color: #6C757D;      /* Text Muted */
+    
+    /* Spacing Scale */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 48px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-full: 9999px;
+}
+
+/* ==========================================================================
+   2. GLOBAL STYLES
+   ========================================================================== */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--dark-color);
+    background-color: #F2F4F8; /* Soft background tint */
+    -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* ==========================================================================
+   3. TYPOGRAPHY
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+}
+
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+.text-3xl { font-size: 1.875rem; }
+
+/* ==========================================================================
+   4. COMPONENT ENHANCEMENTS
+   ========================================================================== */
+
+/* Buttons */
+.btn {
+    font-weight: 600;
+    border-radius: var(--radius-full); /* Pillow buttons by default */
+    padding: 0.5rem 1.25rem;
+    transition: all var(--transition-fast);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-touch {
+    min-height: 48px; /* Touch target size */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 6px -1px rgba(255, 107, 53, 0.4);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(255, 107, 53, 0.5);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--radius-lg);
+    background: white;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* KDS Order Cards */
+.card-new {
+    border-left: 6px solid var(--danger-color) !important;
+}
+
+.card-processing {
+    border-left: 6px solid var(--warning-color) !important;
+}
+
+.card-done {
+    border-left: 6px solid var(--success-color) !important;
+    opacity: 0.8;
+}
+
+/* Modals */
+.modal-content {
+    border-radius: var(--radius-lg);
+    border: none;
+    overflow: hidden;
+}
+
+.modal-backdrop.show {
+    opacity: 0.7; /* Darker backdrop */
+    backdrop-filter: blur(4px); /* Blur effect */
+}
+
+/* ==========================================================================
+   5. UTILITIES & ANIMATIONS
+   ========================================================================== */
+
+/* Skeleton Loading */
+.skeleton-loader .card-img-top,
+.skeleton-loader .placeholder {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-size: 1000px 100%;
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* Checkbox Topping */
+.form-check-input {
+    cursor: pointer;
+    width: 1.5em;
+    height: 1.5em;
+    margin-right: 0.5em;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Floating Cart Button */
+.cart-float {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    z-index: 1030;
+    box-shadow: var(--shadow-xl);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 107, 53, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
+}
+
+/* Fade In Animation */
+.animate__fadeIn {
+    animation: fadeIn var(--transition-base) forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toast */
+.toast-container {
+    z-index: 1060;
+}
+
+.toast {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   6. RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+@media (max-width: 576px) {
+    .container {
+        padding-left: var(--spacing-md);
+        padding-right: var(--spacing-md);
+    }
+    
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    
+    .btn-touch {
+        width: 100%; /* Full width buttons on mobile */
+    }
+    
+    .card-img-top {
+        height: 150px !important; /* Smaller images on mobile */
+    }
+}

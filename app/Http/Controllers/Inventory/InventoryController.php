@@ -1,0 +1,192 @@
+<?php
+
+namespace App\Http\Controllers\Inventory;
+
+use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Topping;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+
+class InventoryController extends Controller
+{
+    /**
+     * Display the inventory management page.
+     */
+    public function index(): View
+    {
+        // Fetch all data for initial load
+        $products = Product::orderBy('category')->orderBy('name')->get();
+        $toppings = Topping::orderBy('category')->orderBy('name')->get();
+
+        return view('inventory.index', compact('products', 'toppings'));
+    }
+
+    // ==========================================
+    // 📦 PRODUCT MANAGEMENT
+    // ==========================================
+
+    public function storeProduct(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'category' => 'required|in:makanan,minuman',
+            'price' => 'required|numeric|min:0',
+            'image_file' => 'nullable|image|max:2048', // Max 2MB
+            'description' => 'nullable|string',
+            'is_available' => 'boolean'
+        ]);
+
+        // Handle Image Upload
+        $imagePath = null;
+        if ($request->hasFile('image_file')) {
+            $imagePath = $request->file('image_file')->store('products', 'public');
+        }
+
+        $product = Product::create([
+            'name' => $validated['name'],
+            'category' => $validated['category'],
+            'price' => $validated['price'],
+            'image' => $imagePath,
+            'description' => $validated['description'] ?? null,
+            'is_available' => $request->boolean('is_available', true),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produk berhasil ditambahkan.',
+            'data' => $product
+        ]);
+    }
+
+    public function updateProduct(Request $request, int $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'category' => 'required|in:makanan,minuman',
+            'price' => 'required|numeric|min:0',
+            'image_file' => 'nullable|image|max:2048',
+            'description' => 'nullable|string',
+            'is_available' => 'boolean'
+        ]);
+
+        // Handle Image Upload
+        if ($request->hasFile('image_file')) {
+            // Delete old image if exists
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $product->image = $request->file('image_file')->store('products', 'public');
+        }
+
+        $product->update([
+            'name' => $validated['name'],
+            'category' => $validated['category'],
+            'price' => $validated['price'],
+            'description' => $validated['description'] ?? null,
+            'is_available' => $request->boolean('is_available'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produk berhasil diperbarui.',
+            'data' => $product
+        ]);
+    }
+
+    public function destroyProduct(int $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+
+        // Delete image
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
+        $product->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Produk berhasil dihapus.'
+        ]);
+    }
+
+    public function getProduct(int $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+        return response()->json($product);
+    }
+
+    // ==========================================
+    // 🥗 TOPPING MANAGEMENT
+    // ==========================================
+
+    public function storeTopping(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:50',
+            'category' => 'required|in:makanan,minuman',
+            'price' => 'required|numeric|min:0',
+            'is_available' => 'boolean'
+        ]);
+
+        $topping = Topping::create([
+            'name' => $validated['name'],
+            'category' => $validated['category'],
+            'price' => $validated['price'],
+            'is_available' => $request->boolean('is_available', true),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Topping berhasil ditambahkan.',
+            'data' => $topping
+        ]);
+    }
+
+    public function updateTopping(Request $request, int $id): JsonResponse
+    {
+        $topping = Topping::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:50',
+            'category' => 'required|in:makanan,minuman',
+            'price' => 'required|numeric|min:0',
+            'is_available' => 'boolean'
+        ]);
+
+        $topping->update([
+            'name' => $validated['name'],
+            'category' => $validated['category'],
+            'price' => $validated['price'],
+            'is_available' => $request->boolean('is_available'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Topping berhasil diperbarui.',
+            'data' => $topping
+        ]);
+    }
+
+    public function destroyTopping(int $id): JsonResponse
+    {
+        $topping = Topping::findOrFail($id);
+        $topping->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Topping berhasil dihapus.'
+        ]);
+    }
+
+    public function getTopping(int $id): JsonResponse
+    {
+        $topping = Topping::findOrFail($id);
+        return response()->json($topping);
+    }
+}
