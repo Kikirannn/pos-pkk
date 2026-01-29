@@ -20,21 +20,44 @@ $(document).ready(function () {
         }
     });
 
-    // Reset Forms on Modal Open (for Add Mode)
-    $('#productModal').on('show.bs.modal', function (e) {
-        // Only reset if it's not opened via Edit button (Edit button sets a flag or pre-fills, logic below)
-        const relatedTarget = $(e.relatedTarget);
-        if (relatedTarget.attr('id') === 'btn-add-product') {
-            resetProductForm();
+    // ==========================================
+    // MODAL HANDLERS (Custom Tailwind Modals)
+    // ==========================================
+
+    function openModal(modalId) {
+        $(`#${modalId}`).removeClass('hidden').addClass('flex');
+    }
+
+    function closeModal(modalId) {
+        $(`#${modalId}`).addClass('hidden').removeClass('flex');
+    }
+
+    // Add Button Handlers
+    $('#btn-add-product').click(function() {
+        resetProductForm();
+        openModal('productModal');
+    });
+
+    $('#btn-add-topping').click(function() {
+        resetToppingForm();
+        openModal('toppingModal');
+    });
+
+    // Close Button Handlers
+    $('.modal-close').click(function() {
+        const modalId = $(this).closest('.modal-overlay').attr('id');
+        closeModal(modalId);
+    });
+
+    // Close on Outside Click
+    $('.modal-overlay').on('mousedown', function(e) {
+        if (e.target === this) {
+            closeModal(this.id);
         }
     });
 
-    $('#toppingModal').on('show.bs.modal', function (e) {
-        const relatedTarget = $(e.relatedTarget);
-        if (relatedTarget.attr('id') === 'btn-add-topping') {
-            resetToppingForm();
-        }
-    });
+    // Remove old Bootstrap event listeners if any were causing issues
+    $('#productModal, #toppingModal').off('show.bs.modal');
 
     // ==========================================
     // PRODUCT CRUD
@@ -67,12 +90,21 @@ $(document).ready(function () {
             headers: { 'X-CSRF-TOKEN': csrfToken },
             success: function (res) {
                 showToast(res.message, 'success');
-                $('#productModal').modal('hide');
+                closeModal('productModal');
                 setTimeout(() => window.location.reload(), 500); // Reload to refresh table
             },
             error: function (xhr) {
                 console.error(xhr);
-                showToast('Gagal menyimpan menu.', 'error');
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessage = '';
+                    for (let field in errors) {
+                        errorMessage += errors[field][0] + '\n';
+                    }
+                    showToast(errorMessage, 'error');
+                } else {
+                    showToast('Gagal menyimpan menu. Silakan coba lagi.', 'error');
+                }
             }
         });
     });
@@ -104,7 +136,7 @@ $(document).ready(function () {
             headers: { 'X-CSRF-TOKEN': csrfToken },
             success: function (res) {
                 showToast(res.message, 'success');
-                $('#toppingModal').modal('hide');
+                closeModal('toppingModal');
                 setTimeout(() => window.location.reload(), 500);
             },
             error: function (xhr) {
@@ -121,71 +153,155 @@ $(document).ready(function () {
 
     window.inventory = {
         editProduct: function (id) {
-            // Fetch Details First
-            $.get(`/inventory/products/${id}`, function (product) {
-                $('#productId').val(product.id);
-                $('#productName').val(product.name);
-                $('#productCategory').val(product.category);
-                $('#productPrice').val(Utils.formatNumber(product.price));
-                $('#productDesc').val(product.description || '');
-                $('#productAvailable').prop('checked', product.is_available);
+            console.log('Fetching product details for ID:', id);
+            $('#global-loader').fadeIn(100); // Force show loader
 
-                $('#productModalTitle').text('Edit Menu');
-                new bootstrap.Modal('#productModal').show();
-            });
+            // Fetch Details First
+            $.get(`/inventory/products/${id}`)
+                .done(function (product) {
+                    console.log('Product data received:', product);
+                    
+                    $('#productId').val(product.id);
+                    $('#productName').val(product.name);
+                    $('#productCategory').val(product.category);
+                    // Use Utils.formatNumber but ensure it treats the input as float/integer correctly
+                    // product.price comes from API as "25000.00" (string) or 25000 (number)
+                    // We need to parse it to integer before formatting to avoid double precision issues
+                    let price = parseInt(product.price); 
+                    $('#productPrice').val(Utils.formatNumber(price));
+                    $('#productStock').val(product.stock);
+                    $('#productDesc').val(product.description || '');
+                    $('#productAvailable').prop('checked', !!product.is_available);
+
+                    $('#productModalTitle').text('Edit Menu');
+                    
+                    openModal('productModal');
+                })
+                .fail(function(xhr) {
+                    console.error('Error fetching product:', xhr);
+                    showToast('Gagal memuat data menu. Cek console untuk detail.', 'error');
+                })
+                .always(function() {
+                    $('#global-loader').fadeOut(200); // Force hide loader
+                });
         },
 
         deleteProduct: function (id) {
             if (!confirm('Yakin ingin menghapus menu ini?')) return;
+            
+            const maxRetries = 3;
+            let attempt = 0;
 
-            $.ajax({
-                url: `/inventory/products/${id}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (res) {
-                    showToast(res.message, 'success');
-                    $(`#product-row-${id}`).fadeOut();
-                },
-                error: function () {
-                    showToast('Gagal menghapus menu.', 'error');
-                }
-            });
+            const performDelete = () => {
+                attempt++;
+                $('#global-loader').fadeIn(100);
+
+                $.ajax({
+                    url: `/inventory/products/${id}`,
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    success: function (res) {
+                        $('#global-loader').fadeOut(200);
+                        showToast(res.message, 'success');
+                        $(`#product-row-${id}`).fadeOut();
+                    },
+                    error: function (xhr) {
+                        console.error(`Attempt ${attempt} failed:`, xhr);
+                        
+                        // Retry on 5xx errors or connection issues (status 0)
+                        if (attempt < maxRetries && (xhr.status >= 500 || xhr.status === 0)) {
+                            const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+                            showToast(`Gagal. Mencoba lagi dalam ${delay/1000} detik...`, 'warning');
+                            setTimeout(performDelete, delay);
+                        } else {
+                            $('#global-loader').fadeOut(200);
+                            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.message) {
+                                showToast(xhr.responseJSON.message, 'error');
+                            } else {
+                                showToast('Gagal menghapus menu. Silakan coba lagi.', 'error');
+                            }
+                        }
+                    }
+                });
+            };
+
+            performDelete();
         },
 
         editTopping: function (id) {
-            $.get(`/inventory/toppings/${id}`, function (topping) {
-                $('#toppingId').val(topping.id);
-                $('#toppingName').val(topping.name);
-                $('#toppingCategory').val(topping.category);
-                $('#toppingPrice').val(Utils.formatNumber(topping.price));
-                $('#toppingAvailable').prop('checked', topping.is_available);
+            console.log('Fetching topping details for ID:', id);
+            $('#global-loader').fadeIn(100);
 
-                $('#toppingModalTitle').text('Edit Topping');
-                new bootstrap.Modal('#toppingModal').show();
-            });
+            $.get(`/inventory/toppings/${id}`)
+                .done(function (topping) {
+                    console.log('Topping data received:', topping);
+
+                    $('#toppingId').val(topping.id);
+                    $('#toppingName').val(topping.name);
+                    $('#toppingCategory').val(topping.category);
+                    let price = parseInt(topping.price);
+                    $('#toppingPrice').val(Utils.formatNumber(price));
+                    $('#toppingAvailable').prop('checked', !!topping.is_available);
+
+                    $('#toppingModalTitle').text('Edit Topping');
+                    
+                    openModal('toppingModal');
+                })
+                .fail(function(xhr) {
+                    console.error('Error fetching topping:', xhr);
+                    showToast('Gagal memuat data topping.', 'error');
+                })
+                .always(function() {
+                    $('#global-loader').fadeOut(200);
+                });
         },
 
         deleteTopping: function (id) {
             if (!confirm('Yakin ingin menghapus topping ini?')) return;
+            
+            const maxRetries = 3;
+            let attempt = 0;
 
-            $.ajax({
-                url: `/inventory/toppings/${id}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (res) {
-                    showToast(res.message, 'success');
-                    $(`#topping-row-${id}`).fadeOut();
-                },
-                error: function () {
-                    showToast('Gagal menghapus topping.', 'error');
-                }
-            });
+            const performDelete = () => {
+                attempt++;
+                $('#global-loader').fadeIn(100);
+
+                $.ajax({
+                    url: `/inventory/toppings/${id}`,
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    success: function (res) {
+                        $('#global-loader').fadeOut(200);
+                        showToast(res.message, 'success');
+                        $(`#topping-row-${id}`).fadeOut();
+                    },
+                    error: function (xhr) {
+                        console.error(`Attempt ${attempt} failed:`, xhr);
+                        
+                        if (attempt < maxRetries && (xhr.status >= 500 || xhr.status === 0)) {
+                            const delay = Math.pow(2, attempt) * 1000;
+                            showToast(`Gagal. Mencoba lagi dalam ${delay/1000} detik...`, 'warning');
+                            setTimeout(performDelete, delay);
+                        } else {
+                            $('#global-loader').fadeOut(200);
+                            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.message) {
+                                showToast(xhr.responseJSON.message, 'error');
+                            } else {
+                                showToast('Gagal menghapus topping. Silakan coba lagi.', 'error');
+                            }
+                        }
+                    }
+                });
+            };
+
+            performDelete();
         }
     };
 
     function resetProductForm() {
         $('#productForm')[0].reset();
         $('#productId').val('');
+        $('#productStock').val('0');
         $('#productModalTitle').text('Tambah Menu Baru');
     }
 

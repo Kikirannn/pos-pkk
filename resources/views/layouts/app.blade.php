@@ -5,253 +5,226 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Aplikasi POS Kantin SMK">
+    <meta name="description" content="Aplikasi POS Bazaar Kelas">
 
-    <title>@yield('title', config('app.name', 'POS Kantin'))</title>
+    <title>@yield('title', config('app.name', 'POS Bazaar'))</title>
 
-    <!-- Fonts: Inter -->
+    <!-- Fonts: Inter (Body) + Playfair Display (Headings) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap 5.3 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Main Theme Colors
+                        'primary': {
+                            DEFAULT: '#FFA726', // Orange 400 (Light Orange)
+                            hover: '#F57C00',   // Orange 700
+                            light: '#FFE0B2',   // Orange 100
+                        },
+                        'secondary': {
+                            DEFAULT: '#FDE047', // Yellow 300 (Muted Yellow)
+                            hover: '#FBC02D',   // Yellow 700
+                        },
+                        // Re-mapped Mono to Warm/Brown Scale
+                        'mono-black': '#3E2723',      // Dark Brown (Text)
+                        'mono-dark': '#5D4037',       // Medium Brown
+                        'mono-charcoal': '#795548',   // Light Brown
+                        'mono-gray-dark': '#8D6E63',  // Brownish Gray
+                        'mono-gray': '#A1887F',       // Lighter Brownish Gray
+                        'mono-gray-light': '#D7CCC8', // Pale Brown
+                        'mono-silver': '#EFEBE9',     // Warm Silver
+                        'mono-light': '#FFE0B2',      // Orange 100 (Borders/Accents)
+                        'mono-off-white': '#FFF8E1',  // Amber 50 (Page Background)
+                        'mono-white': '#FFFFFF',      // White
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'mono': '0 4px 6px -1px rgba(62, 39, 35, 0.05), 0 2px 4px -1px rgba(62, 39, 35, 0.03)',
+                        'mono-md': '0 10px 15px -3px rgba(62, 39, 35, 0.07), 0 4px 6px -2px rgba(62, 39, 35, 0.03)',
+                        'mono-lg': '0 20px 25px -5px rgba(62, 39, 35, 0.08), 0 10px 10px -5px rgba(62, 39, 35, 0.02)',
+                        'mono-xl': '0 25px 50px -12px rgba(62, 39, 35, 0.12)',
+                    }
+                }
+            }
+        }
+    </script>
 
-    <!-- Bootstrap Icons -->
+    <!-- GSAP CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+    <!-- Bootstrap Icons (keeping for icons) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <!-- Custom Styles -->
     <style>
-        :root {
-            /* Color Scheme Configuration */
-            --primary-color: #FF6B35;
-            /* Orange */
-            --secondary-color: #004E89;
-            /* Blue */
-            --success-color: #06D6A0;
-            /* Green */
-            --warning-color: #FFD166;
-            /* Yellow */
-            --danger-color: #EF476F;
-            /* Red/Pink */
-            --dark-color: #1A1A1D;
-            /* Almost Black */
-            --light-color: #F8F9FA;
-            /* White/Grey */
-
-            /* Bootstrap Variable Overrides */
-            --bs-primary: var(--primary-color);
-            --bs-secondary: var(--secondary-color);
-            --bs-success: var(--success-color);
-            --bs-warning: var(--warning-color);
-            --bs-danger: var(--danger-color);
-            --bs-body-font-family: 'Inter', sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        body {
-            font-family: var(--bs-body-font-family);
-            background-color: #F2F4F8;
-            /* Soft background */
-            color: var(--dark-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Typography & Utilities */
-        .fw-medium {
-            font-weight: 500;
-        }
-
-        .fw-semibold {
-            font-weight: 600;
-        }
-
-        /* Smooth Scroll */
         html {
             scroll-behavior: smooth;
         }
 
-        /* Custom Button Styles (Solid) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFF8E1; /* Warm Cream Background */
+            color: #3E2723; /* Dark Brown Text */
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar - Warm Theme */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #FFE0B2;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #A1887F;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8D6E63;
+        }
+
+        /* Display Font Class */
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Smooth Transitions */
+        * {
+            transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+        }
+        
+        /* Helper for Bootstrap-like classes in Kasir */
         .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-            transition: all 0.2s ease;
+            background-color: #FFA726 !important;
+            border-color: #FFA726 !important;
+            color: #3E2723 !important;
+        }
+        .btn-primary:hover {
+            background-color: #F57C00 !important;
+            border-color: #F57C00 !important;
+            color: #FFFFFF !important;
+        }
+        .text-primary {
+            color: #F57C00 !important;
+        }
+        .bg-light {
+            background-color: #FFF8E1 !important;
+        }
+        .bg-primary {
+            background-color: #FFA726 !important;
+        }
+        .border-primary {
+            border-color: #FFA726 !important;
+        }
+        .text-warning {
+            color: #FBC02D !important; /* Muted Yellow */
+        }
+        .bg-danger {
+            background-color: #D32F2F !important; /* Keep Red but maybe warmer? Or stick to standard red for alerts */
+        }
+        .badge.bg-danger {
+            background-color: #F57C00 !important; /* Make cart badge dark orange instead of red */
+            color: #FFFFFF !important;
         }
 
-        .btn-primary:hover,
-        .btn-primary:focus {
-            background-color: #e85a2d;
-            border-color: #e85a2d;
-            transform: translateY(-1px);
-        }
-
-        /* Navbar Styling */
-        .navbar {
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .navbar-brand {
-            color: var(--primary-color) !important;
-            font-weight: 700;
-        }
-
-        /* Main Content Wrapper */
-        main {
-            flex: 1;
-        }
-
-        /* Global Loader */
+        /* Loading Overlay */
         #global-loader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(255, 248, 225, 0.95); /* Warm Cream Overlay */
             z-index: 9999;
             display: none;
-            /* Hidden by default */
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
-        /* Flex Container for centering (applied via JS or nested div) */
         .loader-content {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            background: white;
-            padding: 2.5rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            min-width: 200px;
         }
 
-        .loader-icon-container {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 1.5rem;
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #FFE0B2;
+            border-top-color: #FFA726; /* Orange Spinner */
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
         }
 
-        .loader-icon {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            font-size: 3.5rem;
-            line-height: 1;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .icon-base {
-            color: #e9ecef;
+        /* Utility: Grayscale Image Filter */
+        .grayscale {
+            filter: grayscale(100%);
         }
 
-        .icon-fill {
-            color: var(--primary-color);
-            -webkit-background-clip: text;
-            /* Optional gradient text if needed, but solid color is fine */
-            clip-path: inset(100% 0 0 0);
-            animation: fillUp 2s infinite ease-in-out;
-        }
-
-        @keyframes fillUp {
-            0% {
-                clip-path: inset(100% 0 0 0);
-            }
-
-            40% {
-                clip-path: inset(0 0 0 0);
-            }
-
-            80% {
-                clip-path: inset(0 0 0 0);
-                opacity: 1;
-            }
-
-            100% {
-                clip-path: inset(0 0 0 0);
-                opacity: 0;
-            }
+        .grayscale-hover:hover {
+            filter: grayscale(0%);
         }
     </style>
 
     @stack('styles')
-    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
 </head>
 
-<body>
+<body class="font-body">
     <!-- Global Loading Overlay -->
     <div id="global-loader">
         <div class="loader-content">
-            <div class="loader-icon-container">
-                <i class="bi bi-fire loader-icon icon-base"></i>
-                <i class="bi bi-fire loader-icon icon-fill"></i>
-            </div>
-            <h5 class="mt-2 text-dark fw-bold">Memproses...</h5>
-            <p class="text-muted small mb-0">Mohon tunggu sebentar</p>
+            <div class="loader-spinner"></div>
+            <p class="text-sm font-medium text-mono-dark">Memuat...</p>
         </div>
     </div>
 
-    <!-- Navbar (Global) -->
-    <nav class="navbar navbar-expand-lg sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url('/') }}">
-                <i class="bi bi-cup-hot-fill fs-4"></i>
-                <span>POS Kantin</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fw-medium">
-                    <li class="nav-item">
-                        <a class="nav-link px-3 {{ request()->routeIs('home') ? 'active text-primary' : '' }}"
-                            href="{{ route('home') }}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3 {{ request()->routeIs('kasir.*') ? 'active text-primary' : '' }}"
-                            href="{{ route('kasir.index') }}">
-                            <i class="bi bi-tablet landscape me-1"></i> Kasir
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3 {{ request()->routeIs('dapur.*') ? 'active text-primary' : '' }}"
-                            href="{{ route('dapur.index') }}">
-                            <i class="bi bi-display me-1"></i> Dapur
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Content Area -->
-    <main class="py-4">
+    <!-- Content Area (No Navbar) -->
+    <main>
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-top py-4 mt-auto">
-        <div class="container text-center text-muted small">
-            <p class="mb-1">&copy; {{ date('Y') }} <strong>SMK Kantin Point of Sale</strong></p>
-            <p class="mb-0">Dibuat untuk Project PKK</p>
-        </div>
-    </footer>
+    <!-- Minimal Footer (only show on non-home pages) -->
+    @if(!request()->routeIs('home') && !request()->routeIs('dapur.*') && !request()->routeIs('inventory.*'))
+        <footer class="bg-mono-white border-t border-mono-light py-6 mt-auto">
+            <div class="container mx-auto px-4 text-center text-mono-gray text-xs">
+                <p class="mb-1">&copy; {{ date('Y') }} <strong>Bazaar Kelas POS System</strong></p>
+                <p>Dibuat untuk Project PKK</p>
+            </div>
+        </footer>
+    @endif
 
     <!-- Essential Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ asset('js/utils.js') }}"></script>
 
@@ -273,8 +246,6 @@
 
         // Page Navigation Loader
         $(document).ready(function () {
-            // Check performance navigation to determine if it's a reload or back/forward
-            // ensuring we hide loader if it was stuck
             $('#global-loader').fadeOut(200);
 
             // Handle Link Clicks
@@ -282,12 +253,6 @@
                 let href = $(this).attr('href');
                 let target = $(this).attr('target');
 
-                // Conditions to SHOW loader:
-                // 1. Has href
-                // 2. Not hash link (#)
-                // 3. Not javascript:void
-                // 4. Not open in new tab (target=_blank)
-                // 5. Not Ctrl/Cmd click
                 if (
                     href &&
                     !href.startsWith('#') &&
@@ -301,19 +266,21 @@
 
             // Handle Standard Form Submit (Non-AJAX)
             $('form').on('submit', function () {
-                // Check if the form is NOT handled by AJAX (usually indicated by preventing default or lack of 'action')
                 if (!$(this).data('ajax-handled')) {
                     $('#global-loader').fadeIn(100);
                 }
             });
 
-            // Re-hide on pageshow (fixes back button caching issues in Chrome/Safari)
+            // Re-hide on pageshow (fixes back button caching issues)
             window.addEventListener('pageshow', function (event) {
                 if (event.persisted) {
                     $('#global-loader').hide();
                 }
             });
         });
+
+        // GSAP Registration
+        gsap.registerPlugin(ScrollTrigger);
     </script>
 
     @stack('scripts')
