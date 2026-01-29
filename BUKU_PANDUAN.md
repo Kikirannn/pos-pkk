@@ -108,10 +108,10 @@ Halaman ini digunakan untuk mengontrol apa yang tampil di Landing Page / Kasir.
 **A:** Cek badge di gambar produk. Jika tertulis "Habis" atau "Stok: 0", sistem otomatis mengunci tombol tersebut agar Anda tidak memesan barang kosong.
 
 ### Q: Bagaimana jika pelanggan memesan lebih banyak dari stok?
-**A:** Sistem akan menolak. Misal stok tinggal 2, dan di keranjang sudah ada 2, Anda tidak bisa menambah lagi. Akan muncul peringatan "Stok Terbatas".
+**A:** Sistem akan menolak. Misal stok tinggal 2, dan di keranjang sudah ada 2, Anda tidak bisa menambah lagi. Akan muncul peringatan modal error.
 
 ### Q: Apakah halaman dapur perlu di-refresh manual?
-**A:** Tidak perlu. Halaman dapur akan mengecek pesanan baru setiap 3 detik secara otomatis.
+**A:** Tidak perlu. Halaman dapur akan mengecek pesanan baru setiap 10 detik secara otomatis.
 
 ---
 
