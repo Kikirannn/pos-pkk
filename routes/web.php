@@ -26,10 +26,10 @@ Route::get('/', function () {
 // ==========================================
 // 📱 KASIR SELF-SERVICE (TABLET)
 // ==========================================
-Route::prefix('kasir')->name('kasir.')->group(function () {
-    // View Interface
-    Route::get('/', [KasirController::class, 'index'])->name('index');
-});
+// Route::prefix('kasir')->name('kasir.')->group(function () {
+//     // View Interface
+//     Route::get('/', [KasirController::class, 'index'])->name('index');
+// });
 
 
 // ==========================================

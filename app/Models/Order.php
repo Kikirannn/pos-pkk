@@ -118,6 +118,20 @@ class Order extends Model
         );
     }
 
+    protected function queueNumber(): Attribute
+    {
+        return Attribute::make(
+            // Since order_number is now stored as "001", we can just return it.
+            // But to be safe (if old data "260127001" exists), we keep the substr logic or just return order_number if length <= 3
+            get: function () {
+                if (strlen($this->order_number) <= 3) {
+                    return str_pad($this->order_number, 3, '0', STR_PAD_LEFT);
+                }
+                return substr($this->order_number, -3);
+            }
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helper Methods
@@ -127,11 +141,14 @@ class Order extends Model
     /**
      * Generate next order number for today (e.g., "001").
      * Uses atomic lock or transaction to prevent duplicates in high concurrency.
+     * Resets daily.
      */
     public static function generateOrderNumber(): string
     {
         return DB::transaction(function () {
             // Get last order from today
+            // Note: Since we removed unique constraint on order_number, 
+            // we must scope by today to find the sequence.
             $lastOrder = self::whereDate('created_at', Carbon::today())
                 ->lockForUpdate()
                 ->latest('id')
@@ -141,11 +158,17 @@ class Order extends Model
                 return '001';
             }
 
-            // Extract number (assuming format is numeric or ends with digits)
-            // If order_number is just "001", we can parse it directly.
-            $lastNumber = intval($lastOrder->order_number);
+            // Check if last order has new format (3 digits) or old format (long)
+            $lastOrderNumber = $lastOrder->order_number;
+            
+            // If it's old format "YYMMDDXXX", extract last 3
+            if (strlen($lastOrderNumber) > 3) {
+                 $sequence = intval(substr($lastOrderNumber, -3));
+            } else {
+                 $sequence = intval($lastOrderNumber);
+            }
 
-            return str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+            return str_pad($sequence + 1, 3, '0', STR_PAD_LEFT);
         });
     }
 

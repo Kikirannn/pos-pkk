@@ -38,6 +38,7 @@ class DapurController extends Controller
             return [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
+                'queue_number' => $order->queue_number,       // Display Number (001)
                 'customer_name' => $order->customer_name,
                 'status' => $order->status,
                 'total_price' => (float) $order->total_price,
@@ -49,8 +50,14 @@ class DapurController extends Controller
                     return [
                         'product_name' => $item->product ? $item->product->name : 'Unknown Product',
                         'quantity' => $item->quantity,
-                        // Map toppings names
-                        'toppings' => $item->toppings->pluck('name')->toArray(),
+                        'formatted_subtotal' => 'Rp ' . number_format($item->subtotal, 0, ',', '.'),
+                        // Map toppings with details
+                        'toppings' => $item->toppings->map(function($t) {
+                            return [
+                                'name' => $t->name,
+                                'quantity' => 1 // Default 1 as DB structure doesn't support topping qty yet
+                            ];
+                        })->values(),
                     ];
                 }),
             ];

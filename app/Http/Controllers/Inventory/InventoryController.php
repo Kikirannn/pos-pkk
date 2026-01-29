@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Topping;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -18,8 +19,10 @@ class InventoryController extends Controller
     public function index(): View
     {
         // Fetch all data for initial load
-        $products = Product::orderBy('category')->orderBy('name')->get();
-        $toppings = Topping::orderBy('category')->orderBy('name')->get();
+        // Sorting: Category (Ascending), Created At (Ascending - Oldest First)
+        // This ensures the order matches the database insertion order unless user changes categories
+        $products = Product::orderBy('category')->orderBy('id')->get();
+        $toppings = Topping::orderBy('category')->orderBy('id')->get();
 
         return view('inventory.index', compact('products', 'toppings'));
     }
@@ -36,6 +39,7 @@ class InventoryController extends Controller
             'price' => 'required|numeric|min:0',
             'image_file' => 'nullable|image|max:2048', // Max 2MB
             'description' => 'nullable|string',
+            'stock' => 'required|integer|min:0',
             'is_available' => 'boolean'
         ]);
 
@@ -51,6 +55,7 @@ class InventoryController extends Controller
             'price' => $validated['price'],
             'image' => $imagePath,
             'description' => $validated['description'] ?? null,
+            'stock' => $validated['stock'],
             'is_available' => $request->boolean('is_available', true),
         ]);
 
@@ -71,6 +76,7 @@ class InventoryController extends Controller
             'price' => 'required|numeric|min:0',
             'image_file' => 'nullable|image|max:2048',
             'description' => 'nullable|string',
+            'stock' => 'required|integer|min:0',
             'is_available' => 'boolean'
         ]);
 
@@ -88,6 +94,7 @@ class InventoryController extends Controller
             'category' => $validated['category'],
             'price' => $validated['price'],
             'description' => $validated['description'] ?? null,
+            'stock' => $validated['stock'],
             'is_available' => $request->boolean('is_available'),
         ]);
 
@@ -100,19 +107,24 @@ class InventoryController extends Controller
 
     public function destroyProduct(int $id): JsonResponse
     {
-        $product = Product::findOrFail($id);
+        Log::info("Attempting to delete product ID: {$id}");
+        try {
+            $product = Product::findOrFail($id);
+            $product->delete(); // Soft delete
 
-        // Delete image
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+            Log::info("Product ID: {$id} soft deleted successfully.");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil dihapus.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to delete product ID: {$id}. Error: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus produk: ' . $e->getMessage()
+            ], 500);
         }
-
-        $product->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Produk berhasil dihapus.'
-        ]);
     }
 
     public function getProduct(int $id): JsonResponse
@@ -175,13 +187,20 @@ class InventoryController extends Controller
 
     public function destroyTopping(int $id): JsonResponse
     {
-        $topping = Topping::findOrFail($id);
-        $topping->delete();
+        try {
+            $topping = Topping::findOrFail($id);
+            $topping->delete(); // Soft delete
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Topping berhasil dihapus.'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Topping berhasil dihapus.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus topping: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getTopping(int $id): JsonResponse
