@@ -25,7 +25,7 @@
     <!-- Image 3: Right (Star/Flower) -->
     <div class="absolute top-1/2 right-[-15%] md:right-16 transform -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 z-0 hero-img-3 hidden md:block">
         <div class="w-full h-full bg-white p-2 shadow-lg" style="clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);">
-            <img src="{{ asset('images/Mie Ayam.jpg') }}" class="w-full h-full object-cover" alt="Food 3">
+            <img src="{{ asset('images/Mie Ayam.png') }}" class="w-full h-full object-cover" alt="Food 3">
         </div>
     </div>
 
