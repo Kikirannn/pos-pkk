@@ -8,24 +8,24 @@
     <!-- Header Bar (Sticky) -->
     <div class="sticky top-0 z-30 bg-mono-white border-b-2 border-primary-light shadow-mono">
         <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 md:gap-0">
                 <!-- Title & Counter -->
-                <div class="flex items-center gap-4">
-                    <h1 class="font-display text-3xl md:text-4xl font-bold text-mono-black flex items-center gap-2">
+                <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                    <h1 class="font-display text-2xl md:text-4xl font-bold text-mono-black flex items-center gap-2">
                         <i class="bi bi-fire text-primary"></i> Dapur Monitor
                     </h1>
-                    <span id="pending-count" class="bg-primary text-mono-black px-4 py-2 rounded-full text-sm font-bold">
+                    <span id="pending-count" class="bg-primary text-mono-black px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap">
                         0 Menunggu
                     </span>
                 </div>
 
                 <!-- Status & Time -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                     <div id="connection-status" class="flex items-center gap-2">
                         <div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                        <span class="text-sm font-medium text-mono-gray">Live Sync</span>
+                        <span class="text-xs md:text-sm font-medium text-mono-gray">Live Sync</span>
                     </div>
-                    <div class="text-sm text-mono-gray border-l-2 border-primary-light pl-4">
+                    <div class="text-xs md:text-sm text-mono-gray border-l-2 border-primary-light pl-4">
                         <span id="last-updated">--:--:--</span>
                     </div>
                 </div>

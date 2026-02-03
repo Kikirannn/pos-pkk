@@ -9,22 +9,22 @@
     
     <!-- Floating Images (3 Items) -->
     <!-- Image 1: Top Left (Zig-zag/Geometric) -->
-    <div class="absolute top-10 left-[-5%] md:left-10 w-48 h-48 md:w-64 md:h-64 z-0 hero-img-1 hidden md:block">
-        <div class="w-full h-full bg-white p-2 shadow-lg" style="clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);">
+    <div class="absolute top-5 left-[-5%] md:top-10 md:left-5 lg:left-10 w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 z-0 hero-img-1 hidden md:block opacity-80 md:opacity-100">
+        <div class="w-full h-full bg-white p-2 shadow-lg transition-transform hover:scale-105 duration-500" style="clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);">
             <img src="{{ asset('images/Basreng.jpg') }}" class="w-full h-full object-cover" alt="Food 1">
         </div>
     </div>
 
     <!-- Image 2: Bottom Left (Wavy/Organic) -->
-    <div class="absolute bottom-20 left-[-10%] md:left-20 w-56 h-56 md:w-72 md:h-72 z-0 hero-img-2 hidden md:block">
-        <div class="w-full h-full bg-white p-2 shadow-lg" style="border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;">
+    <div class="absolute bottom-10 left-[-5%] md:bottom-20 md:left-10 lg:left-20 w-40 h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 z-0 hero-img-2 hidden md:block opacity-80 md:opacity-100">
+        <div class="w-full h-full bg-white p-2 shadow-lg transition-transform hover:scale-105 duration-500" style="border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;">
             <img src="{{ asset('images/Lemon Tea.jpg') }}" class="w-full h-full object-cover rounded-[inherit]" alt="Food 2">
         </div>
     </div>
 
     <!-- Image 3: Right (Star/Flower) -->
-    <div class="absolute top-1/2 right-[-15%] md:right-16 transform -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 z-0 hero-img-3 hidden md:block">
-        <div class="w-full h-full bg-white p-2 shadow-lg" style="clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);">
+    <div class="absolute top-1/2 right-[-10%] md:right-5 lg:right-16 transform -translate-y-1/2 w-32 h-32 md:w-48 md:h-48 lg:w-72 lg:h-72 z-0 hero-img-3 hidden md:block opacity-80 md:opacity-100">
+        <div class="w-full h-full bg-white p-2 shadow-lg transition-transform hover:scale-105 duration-500" style="clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);">
             <img src="{{ asset('images/Mie Ayam.png') }}" class="w-full h-full object-cover" alt="Food 3">
         </div>
     </div>
@@ -271,7 +271,7 @@
             <div class="grid md:grid-cols-2 gap-8">
                 <!-- Product Image & Info -->
                 <div>
-                    <img id="modalProductImage" src="" class="w-full h-80 object-cover rounded-lg mb-4 grayscale hover:grayscale-0 transition-all duration-500" alt="">
+                    <img id="modalProductImage" src="" class="w-full h-80 object-cover rounded-lg mb-4 shadow-sm" alt="">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-mono-gray text-sm uppercase tracking-wide">Harga</span>
                         <h3 class="font-display text-4xl font-bold text-mono-black" id="modalProductPrice">Rp 0</h3>

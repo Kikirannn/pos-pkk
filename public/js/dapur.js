@@ -366,14 +366,14 @@ $(document).ready(function () {
                 <li class="pb-3 border-b border-mono-light last:border-0">
                     <div class="flex justify-between items-start">
                         <div class="flex items-start flex-1">
-                            <span class="font-display font-bold text-mono-black text-2xl w-12 text-center bg-mono-light rounded-lg py-1">${item.quantity}</span>
-                            <div class="flex-1 ml-4">
-                                <span class="font-bold text-lg text-mono-black block">${item.product_name}</span>
+                            <span class="font-display font-bold text-mono-black text-xl md:text-2xl w-10 md:w-12 text-center bg-mono-light rounded-lg py-1">${item.quantity}</span>
+                            <div class="flex-1 ml-3 md:ml-4">
+                                <span class="font-bold text-base md:text-lg text-mono-black block">${item.product_name}</span>
                                 ${toppingsHtml}
                             </div>
                         </div>
-                        <div class="ml-4 text-right">
-                             <span class="font-bold text-lg text-primary block">${item.formatted_subtotal}</span>
+                        <div class="ml-2 md:ml-4 text-right">
+                             <span class="font-bold text-base md:text-lg text-primary block">${item.formatted_subtotal}</span>
                         </div>
                     </div>
                 </li>
@@ -400,7 +400,7 @@ $(document).ready(function () {
                     <div class="flex justify-between items-end mt-3">
                         <div>
                             <div class="text-xs text-mono-gray uppercase tracking-widest font-bold mb-1">Nomor Antrian</div>
-                            <h3 class="font-display text-5xl font-bold text-mono-black leading-none tracking-tight">
+                            <h3 class="font-display text-4xl md:text-5xl font-bold text-mono-black leading-none tracking-tight">
                                 ${order.queue_number}
                             </h3>
                             <div class="mt-2 text-primary font-bold flex items-center gap-2 text-sm bg-primary-light px-2 py-1 rounded-md inline-block">
@@ -424,7 +424,7 @@ $(document).ready(function () {
                     <div class="mt-4 pt-4 border-t-2 border-dashed border-mono-light">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-mono-gray font-bold text-sm">Total Pesanan</span>
-                            <span class="text-2xl font-display font-bold text-mono-black">${order.formatted_total}</span>
+                            <span class="text-xl md:text-2xl font-display font-bold text-mono-black">${order.formatted_total}</span>
                         </div>
                         ${btnAction}
                     </div>

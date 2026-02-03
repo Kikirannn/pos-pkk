@@ -39,61 +39,64 @@
             <div id="products-pane" class="tab-pane active">
                 <div class="bg-mono-white rounded-xl border-2 border-primary-light shadow-mono overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-mono-off-white border-b-2 border-primary-light">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-mono-off-white border-b-2 border-primary-light hidden md:table-header-group">
                                 <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Gambar</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Nama Menu</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Kategori</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Harga</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Stok</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Gambar</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Nama Menu</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Kategori</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Harga</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Stok</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-mono-gray uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="products-table-body" class="divide-y divide-primary-light">
+                            <tbody id="products-table-body" class="block md:table-row-group divide-y divide-primary-light">
                                 @forelse ($products as $product)
-                                    <tr id="product-row-{{ $product->id }}" class="hover:bg-mono-off-white transition-colors">
-                                        <td class="px-6 py-4">
-                                            <img src="{{ $product->image_url }}" class="w-16 h-16 object-cover rounded-lg grayscale hover:grayscale-0 transition-all" alt="{{ $product->name }}">
+                                    <tr id="product-row-{{ $product->id }}" class="block md:table-row hover:bg-mono-off-white transition-colors p-4 md:p-0 border-b md:border-b-0 border-primary-light relative">
+                                        <!-- Mobile Layout: Flex Container -->
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-4 md:mb-0 text-center md:text-left">
+                                            <img src="{{ $product->image_url }}" class="w-full h-48 md:w-16 md:h-16 object-cover rounded-lg shadow-sm transition-transform hover:scale-110 mx-auto md:mx-0" alt="{{ $product->name }}">
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <div class="font-bold text-mono-black">{{ $product->name }}</div>
-                                            <div class="text-sm text-mono-gray truncate max-w-xs">{{ $product->description ?? '-' }}</div>
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 text-center md:text-left">
+                                            <div class="font-bold text-mono-black text-xl md:text-base">{{ $product->name }}</div>
+                                            <div class="text-sm text-mono-gray truncate max-w-xs mx-auto md:mx-0">{{ $product->description ?? '-' }}</div>
                                         </td>
-                                        <td class="px-6 py-4">
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 text-center md:text-left">
+                                            <span class="md:hidden font-bold text-mono-gray text-xs uppercase mr-2">Kategori:</span>
                                             @if($product->category == 'makanan')
-                                                <span class="px-3 py-1 bg-primary text-mono-black text-xs font-medium rounded-full uppercase tracking-wide">
+                                                <span class="px-3 py-1 bg-primary text-mono-black text-xs font-medium rounded-full uppercase tracking-wide inline-block">
                                                     <i class="bi bi-egg-fried"></i> Makanan
                                                 </span>
                                             @else
-                                                <span class="px-3 py-1 bg-secondary text-mono-black text-xs font-medium rounded-full uppercase tracking-wide">
+                                                <span class="px-3 py-1 bg-secondary text-mono-black text-xs font-medium rounded-full uppercase tracking-wide inline-block">
                                                     <i class="bi bi-cup-straw"></i> Minuman
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 font-bold text-mono-black">{{ $product->formatted_price }}</td>
-                                        <td class="px-6 py-4 font-bold text-mono-black">
-                                            @if($product->stock <= 5)
-                                                <span class="text-red-500">{{ $product->stock }}</span>
-                                            @else
-                                                <span>{{ $product->stock }}</span>
-                                            @endif
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 font-bold text-mono-black text-lg md:text-base text-center md:text-left">
+                                            {{ $product->formatted_price }}
                                         </td>
-                                        <td class="px-6 py-4">
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 text-center md:text-left">
+                                            <span class="md:hidden font-bold text-mono-gray text-xs uppercase mr-2">Stok:</span>
+                                            <span class="font-bold text-mono-black {{ $product->stock <= 5 ? 'text-red-500' : '' }}">{{ $product->stock }}</span>
+                                        </td>
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-4 md:mb-0 text-center md:text-left">
                                             @if($product->is_available)
-                                                <span class="px-3 py-1 bg-primary text-mono-black text-xs font-medium rounded-full">Tersedia</span>
+                                                <span class="px-3 py-1 bg-primary text-mono-black text-xs font-medium rounded-full inline-block">Tersedia</span>
                                             @else
-                                                <span class="px-3 py-1 bg-mono-light text-mono-gray text-xs font-medium rounded-full">Habis</span>
+                                                <span class="px-3 py-1 bg-mono-light text-mono-gray text-xs font-medium rounded-full inline-block">Habis</span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <button onclick="inventory.editProduct({{ $product->id }})" class="inline-flex items-center justify-center w-10 h-10 border-2 border-primary hover:bg-primary hover:text-mono-black rounded-full transition-all mr-2">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button onclick="inventory.deleteProduct({{ $product->id }})" class="inline-flex items-center justify-center w-10 h-10 border-2 border-primary hover:bg-primary hover:text-mono-black rounded-full transition-all">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                        <td class="md:px-6 md:py-4 block md:table-cell text-center md:text-right">
+                                            <div class="flex justify-center md:justify-end gap-2 w-full">
+                                                <button onclick="inventory.editProduct({{ $product->id }})" class="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2 md:w-10 md:h-10 border-2 border-primary hover:bg-primary hover:text-mono-black rounded-full transition-all text-sm font-bold md:font-normal">
+                                                    <i class="bi bi-pencil mr-2 md:mr-0"></i> <span class="md:hidden">Edit</span>
+                                                </button>
+                                                <button onclick="inventory.deleteProduct({{ $product->id }})" class="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2 md:w-10 md:h-10 border-2 border-primary hover:bg-primary hover:text-mono-black rounded-full transition-all text-sm font-bold md:font-normal">
+                                                    <i class="bi bi-trash mr-2 md:mr-0"></i> <span class="md:hidden">Hapus</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -114,42 +117,50 @@
             <div id="toppings-pane" class="tab-pane hidden">
                 <div class="bg-mono-white rounded-xl border-2 border-mono-light shadow-mono overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-mono-off-white border-b-2 border-mono-light">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-mono-off-white border-b-2 border-mono-light hidden md:table-header-group">
                                 <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Nama Topping</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Kategori</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Harga Tambahan</th>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-mono-gray uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Nama Topping</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Kategori</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Harga Tambahan</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-mono-gray uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-mono-gray uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="toppings-table-body" class="divide-y divide-mono-light">
+                            <tbody id="toppings-table-body" class="block md:table-row-group divide-y divide-mono-light">
                                 @forelse ($toppings as $topping)
-                                    <tr id="topping-row-{{ $topping->id }}" class="hover:bg-mono-off-white transition-colors">
-                                        <td class="px-6 py-4 font-bold text-mono-black">{{ $topping->name }}</td>
-                                        <td class="px-6 py-4">
+                                    <tr id="topping-row-{{ $topping->id }}" class="block md:table-row hover:bg-mono-off-white transition-colors p-4 md:p-0 border-b md:border-b-0 border-mono-light relative">
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 text-center md:text-left">
+                                            <span class="font-bold text-mono-black text-lg md:text-base">{{ $topping->name }}</span>
+                                        </td>
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 text-center md:text-left">
+                                            <span class="md:hidden font-bold text-mono-gray text-xs uppercase mr-2">Kategori:</span>
                                             @if($topping->category == 'makanan')
-                                                <span class="px-3 py-1 bg-mono-dark text-mono-white text-xs font-medium rounded-full uppercase tracking-wide">Makanan</span>
+                                                <span class="px-3 py-1 bg-mono-dark text-mono-white text-xs font-medium rounded-full uppercase tracking-wide inline-block">Makanan</span>
                                             @else
-                                                <span class="px-3 py-1 bg-mono-gray text-mono-white text-xs font-medium rounded-full uppercase tracking-wide">Minuman</span>
+                                                <span class="px-3 py-1 bg-mono-gray text-mono-white text-xs font-medium rounded-full uppercase tracking-wide inline-block">Minuman</span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 font-bold text-mono-black">{{ $topping->formatted_price }}</td>
-                                        <td class="px-6 py-4">
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-2 md:mb-0 font-bold text-mono-black text-center md:text-left">
+                                            <span class="md:hidden font-bold text-mono-gray text-xs uppercase mr-2">Harga:</span>
+                                            {{ $topping->formatted_price }}
+                                        </td>
+                                        <td class="md:px-6 md:py-4 block md:table-cell mb-4 md:mb-0 text-center md:text-left">
                                             @if($topping->is_available)
-                                                <span class="px-3 py-1 bg-mono-black text-mono-white text-xs font-medium rounded-full">Tersedia</span>
+                                                <span class="px-3 py-1 bg-mono-black text-mono-white text-xs font-medium rounded-full inline-block">Tersedia</span>
                                             @else
-                                                <span class="px-3 py-1 bg-mono-light text-mono-gray text-xs font-medium rounded-full">Habis</span>
+                                                <span class="px-3 py-1 bg-mono-light text-mono-gray text-xs font-medium rounded-full inline-block">Habis</span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <button onclick="inventory.editTopping({{ $topping->id }})" class="inline-flex items-center justify-center w-10 h-10 border-2 border-mono-dark hover:bg-mono-dark hover:text-mono-white rounded-full transition-all mr-2">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button onclick="inventory.deleteTopping({{ $topping->id }})" class="inline-flex items-center justify-center w-10 h-10 border-2 border-mono-dark hover:bg-mono-dark hover:text-mono-white rounded-full transition-all">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                        <td class="md:px-6 md:py-4 block md:table-cell text-center md:text-right">
+                                            <div class="flex justify-center md:justify-end gap-2 w-full">
+                                                <button onclick="inventory.editTopping({{ $topping->id }})" class="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2 md:w-10 md:h-10 border-2 border-mono-dark hover:bg-mono-dark hover:text-mono-white rounded-full transition-all text-sm font-bold md:font-normal">
+                                                    <i class="bi bi-pencil mr-2 md:mr-0"></i> <span class="md:hidden">Edit</span>
+                                                </button>
+                                                <button onclick="inventory.deleteTopping({{ $topping->id }})" class="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2 md:w-10 md:h-10 border-2 border-mono-dark hover:bg-mono-dark hover:text-mono-white rounded-full transition-all text-sm font-bold md:font-normal">
+                                                    <i class="bi bi-trash mr-2 md:mr-0"></i> <span class="md:hidden">Hapus</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
