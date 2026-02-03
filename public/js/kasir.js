@@ -1,362 +1,562 @@
 /**
- * Kasir Self-Service Application Logic
- * 
- * Features:
- * - State Management (Cart, Products, Toppings)
- * - API Integration (Fetch & Submit)
- * - Dynamic Rendering
- * - Complex Price Calculation
- * - Idle Timer
+ * KASIR JS - Integrated with Landing Page
+ * Handles: Auto Scroll Flow, Product Rendering, Cart Management, Order Processing
  */
 
 $(document).ready(function () {
-
+    
     // ==========================================
     // 1. STATE MANAGEMENT
     // ==========================================
-    let state = {
+    const app = {
         products: [],
-        toppings: { makanan: [], minuman: [] },
+        toppings: [],
         cart: [],
-        currentProduct: null,     // Product currently being viewed in modal
-        currentQty: 1,
-        selectedToppings: [],     // Array of topping objects
-        activeCategory: 'makanan', // Default category
-        idleTimer: null,
-        idleTimeLimit: 60000,     // 60 seconds to reset
+        currentCategory: 'makanan',
+        currentProduct: null, // For modal
+        isShoppingMode: false
     };
 
     // ==========================================
-    // 2. INITIALIZATION & DATA FETCHING
+    // 2. INITIALIZATION
     // ==========================================
-
     function init() {
-        console.log('Initializing Kasir App...');
-
-        // Initial Fetch
+        console.log('Initializing Kasir System...');
+        
+        // Initial Data Fetch
+        fetchProducts();
         fetchToppings();
-        fetchProducts('makanan'); // Default Load
 
-        // Start Idle Timer
-        resetIdleTimer();
+        // Setup Event Listeners
+        setupEventListeners();
 
-        // Setup Global Event Listeners for User Activity (Reset Timer)
-        $(document).on('click mousemove touchstart keydown', resetIdleTimer);
+        // Check if we should restore cart (optional, maybe clear for kiosk mode)
+        // For Kiosk mode, we usually start fresh.
+        
+        // GSAP Intro Animation for Hero
+        animateHero();
     }
 
-    /**
-     * Fetch products by category from API
-     * @param {string} category - 'makanan' or 'minuman'
-     */
-    function fetchProducts(category) {
-        state.activeCategory = category;
-        showLoadingProducts();
+    // ==========================================
+    // 3. AUTO SCROLL & LOCK FLOW
+    // ==========================================
+    
+    function startShoppingFlow() {
+        if (app.isShoppingMode) return;
+        app.isShoppingMode = true;
 
-        $.ajax({
-            url: '/api/products',
-            method: 'GET',
-            data: { category: category },
-            success: function (response) {
-                state.products = response;
-                renderProducts(state.products);
-            },
-            error: function (err) {
-                console.error('Error fetching products:', err);
-                showToast('Gagal memuat produk. Silakan coba lagi.', 'error');
-                $('#products-container').html('<div class="col-12 text-center py-5 text-muted">Gagal memuat data.</div>');
+        console.log('Starting Shopping Flow...');
+
+        // Disable button to prevent double clicks
+        $('#btn-start-shopping').addClass('pointer-events-none opacity-50');
+
+        // Sequence using Promises for better control
+        const sequence = async () => {
+            // 1. Scroll to About
+            await scrollToSection('#about', 2000);
+            
+            // 2. Scroll to How It Works
+            await scrollToSection('#how-it-works', 3000); // Give time to read
+
+            // 3. Scroll to Kasir
+            await scrollToSection('#kasir', 1000);
+
+            // 4. Lock Interface - REMOVED per user request
+            // lockToKasir();
+            
+            // Re-enable button
+            $('#btn-start-shopping').removeClass('pointer-events-none opacity-50');
+            app.isShoppingMode = false;
+        };
+
+        sequence();
+    }
+
+    function scrollToSection(selector, duration) {
+        return new Promise(resolve => {
+            const el = document.querySelector(selector);
+            if (el) {
+                // Smooth scroll
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Wait for the duration before resolving
+                setTimeout(resolve, duration);
+            } else {
+                resolve(); // Skip if not found
             }
         });
     }
 
-    /**
-     * Fetch all available toppings
-     */
+    /* 
+    // Lock Function Removed per request
+    function lockToKasir() {
+        ...
+    }
+    */
+
+    function animateHero() {
+        // Optimized GSAP entry for Hero
+        const tl = gsap.timeline();
+        
+        // Use autoAlpha for better performance (handles opacity + visibility)
+        // Add force3D and willChange to optimize GPU usage
+        tl.from('.hero-content > *', {
+            opacity: 0,
+            y: 30,
+            duration: 0.6, // Reduced from 0.8s for snappier feel
+            stagger: 0.1,  // Reduced from 0.2s to minimize delay
+            ease: 'power3.out', // Snappier ease than power2
+            force3D: true, // Force hardware acceleration
+            willChange: 'transform, opacity', // Hint browser to optimize layering
+            clearProps: 'willChange' // Clean up after animation to free memory
+        });
+
+        // Animate Floating Images (Pop in)
+        gsap.from('.hero-img-1, .hero-img-2, .hero-img-3', {
+            scale: 0,
+            opacity: 0,
+            rotation: -15,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: 'back.out(1.7)',
+            delay: 0.3
+        });
+
+        // Continuous Floating Animation (Yoyo)
+        gsap.to('.hero-img-1', {
+            y: -15,
+            rotation: 5,
+            duration: 3,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut'
+        });
+
+        gsap.to('.hero-img-2', {
+            y: 15,
+            rotation: -5,
+            duration: 4,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay: 0.5
+        });
+
+        gsap.to('.hero-img-3', {
+            x: 10,
+            rotation: 3,
+            duration: 5,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay: 1
+        });
+    }
+
+    // ==========================================
+    // 4. DATA FETCHING
+    // ==========================================
+
+    function fetchProducts() {
+        $.ajax({
+            url: '/api/products',
+            method: 'GET',
+            success: function (response) {
+                // Handle response if it's direct array or wrapped object
+                app.products = Array.isArray(response) ? response : (response.products || []);
+                renderProducts();
+            },
+            error: function () {
+                $('#products-container').html('<div class="col-span-3 text-center text-red-500">Gagal memuat produk.</div>');
+            }
+        });
+    }
+
     function fetchToppings() {
         $.ajax({
             url: '/api/toppings',
             method: 'GET',
             success: function (response) {
-                state.toppings = response; // Expected format: { makanan: [], minuman: [] }
-            },
-            error: function (err) {
-                console.error('Error fetching toppings:', err);
+                // Handle grouped response from controller {makanan: [], minuman: []}
+                let all = [];
+                if (response.makanan && Array.isArray(response.makanan)) {
+                    all = all.concat(response.makanan);
+                }
+                if (response.minuman && Array.isArray(response.minuman)) {
+                    all = all.concat(response.minuman);
+                }
+                
+                // Fallback if response is direct array
+                if (Array.isArray(response)) {
+                    all = response;
+                } else if (response.toppings && Array.isArray(response.toppings)) {
+                    all = response.toppings;
+                }
+
+                app.toppings = all;
             }
         });
     }
 
     // ==========================================
-    // 3. RENDERING FUNCTIONS
+    // 5. RENDERING
     // ==========================================
 
-    /**
-     * Render product cards grid
-     * @param {Array} products 
-     */
-    function renderProducts(products) {
+    function renderProducts() {
         const container = $('#products-container');
         container.empty();
 
-        if (products.length === 0) {
+        // Safe filtering (case-insensitive and handling nulls)
+        const filtered = app.products.filter(p => 
+            p.category && p.category.toLowerCase() === app.currentCategory.toLowerCase()
+        );
+
+        if (filtered.length === 0) {
             container.html(`
-                <div class="col-12 text-center py-5">
-                    <i class="bi bi-search display-1 text-muted opacity-25"></i>
-                    <p class="mt-3 text-muted fs-4">Menu tidak ditemukan</p>
+                <div class="col-span-full text-center py-12">
+                    <i class="bi bi-search text-4xl text-mono-gray-light mb-4 block"></i>
+                    <p class="text-mono-gray">Tidak ada menu di kategori ini.</p>
                 </div>
             `);
             return;
         }
 
-        products.forEach(product => {
-            const html = `
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm product-card-hover cursor-pointer" onclick="app.openToppingModal(${product.id})">
-                        <div class="position-relative overflow-hidden">
-                            <img src="${product.image_url}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: cover;">
-                            <button class="btn btn-primary position-absolute bottom-0 end-0 m-3 rounded-circle shadow" style="width: 45px; height: 45px;">
-                                <i class="bi bi-plus-lg text-white"></i>
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold mb-1 text-truncate">${product.name}</h5>
-                            <p class="card-text text-primary fw-bold fs-5 mb-0">${product.formatted_price}</p>
-                        </div>
+        // Use DocumentFragment for performance
+        const fragment = document.createDocumentFragment();
+
+        filtered.forEach((product, index) => {
+            const priceFormatted = formatRupiah(product.price);
+            const imageSrc = product.image_url || 'https://via.placeholder.com/300?text=No+Image';
+            
+            // Stagger animation delay using inline style
+            const delay = Math.min(index * 0.05, 1.0); // Cap delay at 1s max
+
+            // Stock Badge Logic
+            let stockBadge = '';
+            let isOutOfStock = product.stock <= 0;
+            let buttonHtml = '';
+
+            if (isOutOfStock) {
+                stockBadge = `<div class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold shadow-sm">Habis</div>`;
+                buttonHtml = `
+                    <button class="mt-3 w-full py-2 bg-gray-200 text-gray-400 font-bold rounded-lg text-sm cursor-not-allowed" disabled>
+                        Stok Habis
+                    </button>
+                `;
+            } else {
+                stockBadge = `<div class="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold shadow-sm">Stok: ${product.stock}</div>`;
+                buttonHtml = `
+                    <button class="mt-3 w-full py-2 bg-mono-off-white text-primary font-bold rounded-lg text-sm">
+                        Tambah
+                    </button>
+                `;
+            }
+
+            const cardDiv = document.createElement('div');
+            // Removed hover effects: hover:shadow-mono-lg, hover:border-primary-light, group
+            cardDiv.className = `product-card bg-mono-white rounded-2xl p-4 shadow-mono border border-transparent animate-fade-in opacity-0 ${isOutOfStock ? 'opacity-70 grayscale' : ''}`;
+            cardDiv.style.animationDelay = `${delay}s`;
+            if (!isOutOfStock) {
+                cardDiv.onclick = () => kasir.openProductModal(product.id);
+            }
+
+            cardDiv.innerHTML = `
+                <div class="relative overflow-hidden rounded-xl mb-4 h-40 bg-mono-light">
+                    ${stockBadge}
+                    <!-- Removed hover effects: transform, group-hover:scale-110, transition-transform, duration-500 -->
+                    <img src="${imageSrc}" class="w-full h-full object-cover" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                    <div class="absolute bottom-2 right-2 bg-mono-white bg-opacity-90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm">
+                        <span class="font-bold text-mono-black text-sm">${priceFormatted}</span>
                     </div>
                 </div>
+                <!-- Removed hover effects: group-hover:text-primary, transition-colors -->
+                <h3 class="font-display font-bold text-lg text-mono-black leading-tight mb-1">${product.name}</h3>
+                <p class="text-xs text-mono-gray line-clamp-2">${product.description || 'Enak dan lezat.'}</p>
+                <!-- Removed hover effects: group-hover:bg-primary, group-hover:text-mono-black, transition-colors -->
+                ${buttonHtml}
             `;
-            container.append(html);
+            
+            fragment.appendChild(cardDiv);
         });
+
+        container.append(fragment);
     }
 
-    /**
-     * Render items in Cart Modal
-     */
     function renderCart() {
-        const list = $('#cartItemsList');
-        list.empty();
+        const container = $('#sidebarCartItems');
+        container.empty();
 
-        if (state.cart.length === 0) {
-            list.html(`
-                <div class="text-center py-5">
-                    <i class="bi bi-cart-x fs-1 text-muted opacity-50"></i>
-                    <p class="mt-3 text-muted fs-5">Keranjang masih kosong</p>
+        if (app.cart.length === 0) {
+            container.html(`
+                <div class="text-center py-10 empty-cart">
+                    <i class="bi bi-basket text-4xl text-mono-gray-light mb-3 block"></i>
+                    <p class="text-sm text-mono-gray">Belum ada menu yang dipilih</p>
                 </div>
             `);
-            $('#cart-grand-total').text('Rp 0');
-            $('#btn-checkout').prop('disabled', true);
+            $('#sidebar-subtotal').text('Rp 0');
+            $('#sidebar-total').text('Rp 0');
+            $('#btn-process-order').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
             return;
         }
 
-        let grandTotal = 0;
+        let total = 0;
 
-        state.cart.forEach((item, index) => {
-            const itemTotal = calculateItemSubtotal(item);
-            grandTotal += itemTotal;
+        app.cart.forEach((item, index) => {
+            const itemTotal = (item.price * item.quantity) + (item.toppings.reduce((a, b) => a + b.price, 0) * item.quantity);
+            total += itemTotal;
 
-            const toppingsHtml = item.toppings.length > 0
-                ? `<div class="text-muted small mt-1">
-                    <i class="bi bi-plus small"></i> ${item.toppings.map(t => t.name).join(', ')}
-                   </div>`
+            const toppingsHtml = item.toppings.length > 0 
+                ? `<div class="text-xs text-mono-gray mt-1">+ ${item.toppings.map(t => t.name).join(', ')}</div>` 
                 : '';
 
             const html = `
-                <div class="list-group-item p-3 border-bottom-0 border-top bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <h6 class="fw-bold mb-0">${item.product.name}</h6>
-                            ${toppingsHtml}
+                <div class="flex gap-3 bg-mono-off-white p-3 rounded-xl border border-transparent hover:border-primary-light transition-colors relative group">
+                    <!-- Remove Button (Persistent & Touch Friendly) -->
+                    <button class="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full shadow-md z-10 flex items-center justify-center transition-transform transform active:scale-95 focus:outline-none" onclick="kasir.removeFromCart(${index})" aria-label="Hapus item">
+                        <i class="bi bi-trash text-sm"></i>
+                    </button>
+
+                    <!-- Image -->
+                    <div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="${item.image_url || 'https://via.placeholder.com/150'}" class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-mono-black text-sm truncate pr-6">${item.name}</h4>
+                            <span class="font-bold text-mono-black text-xs">${formatRupiah(itemTotal)}</span>
                         </div>
-                        <div class="fw-bold text-primary">${formatPrice(itemTotal)}</div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-outline-secondary rounded-circle" onclick="app.updateCartQty(${index}, -1)" style="width: 32px; height: 32px;">-</button>
-                            <span class="fw-bold px-2">${item.quantity}</span>
-                            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="app.updateCartQty(${index}, 1)" style="width: 32px; height: 32px;">+</button>
+                        ${toppingsHtml}
+                        
+                        <!-- Qty Control Mini -->
+                        <div class="flex items-center gap-2 mt-2">
+                            <button class="w-6 h-6 bg-mono-white rounded-full text-primary border border-primary-light flex items-center justify-center hover:bg-primary hover:text-mono-black transition-colors" onclick="kasir.updateCartQty(${index}, -1)">-</button>
+                            <span class="text-xs font-bold text-mono-black w-4 text-center">${item.quantity}</span>
+                            <button class="w-6 h-6 bg-mono-white rounded-full text-primary border border-primary-light flex items-center justify-center hover:bg-primary hover:text-mono-black transition-colors" onclick="kasir.updateCartQty(${index}, 1)">+</button>
                         </div>
-                        <button class="btn btn-sm btn-link text-danger text-decoration-none p-0" onclick="app.removeFromCart(${index})">
-                            <i class="bi bi-trash me-1"></i>Hapus
-                        </button>
                     </div>
-                </div>
-            `;
-            list.append(html);
-        });
-
-        $('#cart-grand-total').text(formatPrice(grandTotal));
-        $('#btn-checkout').prop('disabled', false);
-    }
-
-    function showLoadingProducts() {
-        const skeleton = `
-            <div class="col skeleton-loader"><div class="card h-100 border-0 shadow-sm"><div class="card-img-top bg-light" style="height: 200px;"></div><div class="card-body"><h5 class="placeholder-glow"><span class="placeholder col-6"></span></h5><p class="placeholder-glow"><span class="placeholder col-4"></span></p></div></div></div>
-        `;
-        $('#products-container').html(skeleton.repeat(4));
-    }
-
-    // ==========================================
-    // 4. MODAL LOGIC (ADD TO CART)
-    // ==========================================
-
-    /**
-     * Open Modal to configure product (add toppings)
-     * @param {number} productId 
-     */
-    window.app.openToppingModal = function (productId) {
-        state.currentProduct = state.products.find(p => p.id === productId);
-        state.currentQty = 1;
-        state.selectedToppings = [];
-
-        if (!state.currentProduct) return;
-
-        // Populate Modal Info
-        $('#modalProductName').text(state.currentProduct.name);
-        $('#modalProductPrice').text(state.currentProduct.formatted_price);
-        $('#modalProductDesc').text(state.currentProduct.description || 'Tidak ada deskripsi');
-        $('#modalProductImage').attr('src', state.currentProduct.image_url);
-        $('#modalQty').text(state.currentQty);
-
-        // Render Toppings specific to product category
-        renderToppingsSelection(state.currentProduct.category);
-
-        updateModalSubtotal();
-
-        // Show Modal
-        new bootstrap.Modal('#addToCartModal').show();
-    };
-
-    function renderToppingsSelection(category) {
-        const container = $('#toppingsList');
-        container.empty();
-
-        // Get relevant toppings (ensure access safe)
-        const relevantToppings = state.toppings[category] || [];
-
-        if (relevantToppings.length === 0) {
-            container.html('<div class="text-muted text-center small py-2">Tidak ada topping tersedia untuk kategori ini.</div>');
-            return;
-        }
-
-        relevantToppings.forEach(topping => {
-            const html = `
-                <div class="d-flex justify-content-between align-items-center p-2 rounded hover-bg-light border-bottom border-light">
-                    <div class="form-check flex-grow-1">
-                        <input class="form-check-input topping-checkbox" type="checkbox" value="${topping.id}" id="topping-${topping.id}" 
-                               data-price="${topping.price}" data-name="${topping.name}">
-                        <label class="form-check-label w-100" for="topping-${topping.id}">
-                            ${topping.name}
-                        </label>
-                    </div>
-                    <span class="fw-bold text-muted small">+${formatPrice(topping.price)}</span>
                 </div>
             `;
             container.append(html);
         });
 
-        // Bind change events
-        $('.topping-checkbox').change(function () {
-            const id = parseInt($(this).val());
-            const price = parseFloat($(this).data('price'));
-            const name = $(this).data('name');
-            const isChecked = $(this).is(':checked');
-
-            if (isChecked) {
-                state.selectedToppings.push({ id, price, name });
-            } else {
-                state.selectedToppings = state.selectedToppings.filter(t => t.id !== id);
-            }
-            updateModalSubtotal();
-        });
+        $('#sidebar-subtotal').text(formatRupiah(total));
+        $('#sidebar-total').text(formatRupiah(total));
+        $('#btn-process-order').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
     }
+
+    // ==========================================
+    // 6. ACTIONS & MODALS
+    // ==========================================
+
+    // Open Product Modal
+    window.kasir = {
+        openProductModal: function(id) {
+            const product = app.products.find(p => p.id === id);
+            if (!product) return;
+            
+            // Stock Check
+            if (product.stock <= 0) {
+                showNotification('Stok Habis', 'Maaf, stok produk ini sedang kosong.', 'error');
+                return;
+            }
+
+            // FEATURE: Conditional Logic
+            // Only show modal for "Mie Ayam". Others add directly.
+            const productName = product.name.toLowerCase();
+            const isMieAyam = productName.includes('mie ayam');
+
+            if (!isMieAyam) {
+                // Direct Add to Cart
+                // Check if already in cart and stock limit
+                const existingItem = app.cart.find(item => item.id === product.id);
+                const currentQty = existingItem ? existingItem.quantity : 0;
+                
+                if (currentQty + 1 > product.stock) {
+                     showNotification('Stok Terbatas', `Hanya tersedia ${product.stock} item.`, 'warning');
+                     return;
+                }
+
+                if (existingItem) {
+                    existingItem.quantity++;
+                } else {
+                    const cartItem = {
+                        id: product.id,
+                        name: product.name,
+                        price: parseFloat(product.price),
+                        image_url: product.image_url,
+                        quantity: 1,
+                        toppings: [] // No toppings
+                    };
+                    app.cart.push(cartItem);
+                }
+                
+                renderCart();
+
+                // Feedback
+                const btn = $('#btn-process-order');
+                btn.addClass('animate-bounce');
+                setTimeout(() => btn.removeClass('animate-bounce'), 1000);
+
+                showNotification('Berhasil', `${product.name} telah ditambahkan ke keranjang!`);
+
+                return;
+            }
+
+            // --- Show Modal for Mie Ayam ---
+            app.currentProduct = { ...product, quantity: 1, selectedToppings: [] };
+
+            // Populate Modal
+            $('#modalProductName').text(product.name);
+            $('#modalProductPrice').text(formatRupiah(product.price));
+            $('#modalProductDesc').text(product.description || 'Tidak ada deskripsi.');
+            $('#modalProductImage').attr('src', product.image_url || 'https://via.placeholder.com/300');
+            $('#modalQty').text(1);
+            
+            // Set Max Qty based on stock (minus what's already in cart)
+            const existingItem = app.cart.find(item => item.id === product.id);
+            const currentQtyInCart = existingItem ? existingItem.quantity : 0;
+            const maxQty = product.stock - currentQtyInCart;
+            
+            $('#modalQty').data('max', maxQty);
+            if (maxQty <= 0) {
+                 showNotification('Stok Habis', 'Anda sudah mengambil semua stok tersedia.', 'error');
+                 return;
+            }
+
+            // Render Toppings
+            const toppingsContainer = $('#toppingsList');
+            toppingsContainer.empty();
+            
+            // Filter toppings based on product category
+            const relevantToppings = app.toppings.filter(t => 
+                t.category && product.category && 
+                t.category.toLowerCase() === product.category.toLowerCase()
+            );
+
+            if (relevantToppings.length > 0) {
+                relevantToppings.forEach(topping => {
+                    const tHtml = `
+                        <div class="topping-item flex items-center justify-between p-3 rounded-lg border border-mono-light hover:border-primary-light cursor-pointer transition-colors bg-mono-off-white">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="top-${topping.id}" value="${topping.id}" data-price="${topping.price}" data-name="${topping.name}">
+                                <label for="top-${topping.id}" class="cursor-pointer select-none">
+                                    <span class="font-bold text-mono-black block">${topping.name}</span>
+                                </label>
+                            </div>
+                            <span class="text-sm font-bold text-primary">+${formatRupiah(topping.price)}</span>
+                        </div>
+                    `;
+                    toppingsContainer.append(tHtml);
+                });
+            } else {
+                toppingsContainer.html('<div class="text-sm text-mono-gray italic">Tidak ada topping tersedia untuk kategori ini.</div>');
+            }
+
+            updateModalSubtotal();
+            
+            // Show Modal
+            $('#addToCartModal').removeClass('hidden');
+        },
+
+        removeFromCart: function(index) {
+            app.cart.splice(index, 1);
+            renderCart();
+        },
+
+        updateCartQty: function(index, change) {
+            const item = app.cart[index];
+            const newQty = item.quantity + change;
+
+            if (newQty < 1) {
+                // Confirm delete? For now just remove
+                app.cart.splice(index, 1);
+            } else {
+                item.quantity = newQty;
+            }
+            renderCart();
+        }
+    };
 
     function updateModalSubtotal() {
-        if (!state.currentProduct) return;
+        if (!app.currentProduct) return;
+        
+        // Parse base price as float to avoid string concatenation issues
+        let price = parseFloat(app.currentProduct.price);
+        
+        // Add Toppings
+        $('#toppingsList input:checked').each(function() {
+            price += parseFloat($(this).data('price')) || 0;
+        });
 
-        // Calculate: (Product Price + Total Topping Price) * Qty
-        const toppingTotal = state.selectedToppings.reduce((sum, t) => sum + t.price, 0);
-        const subtotal = (parseFloat(state.currentProduct.price) + toppingTotal) * state.currentQty;
-
-        $('#modalSubtotal').text(formatPrice(subtotal));
+        const subtotal = price * parseInt(app.currentProduct.quantity);
+        $('#modalSubtotal').text(formatRupiah(subtotal));
     }
 
-    // ==========================================
-    // 5. CART MANAGEMENT
-    // ==========================================
+    function addToCart() {
+        if (!app.currentProduct) return;
 
-    $('#btn-add-to-cart').click(function () {
-        if (!state.currentProduct) return;
+        // Get Toppings
+        const selectedToppings = [];
+        $('#toppingsList input:checked').each(function() {
+            selectedToppings.push({
+                id: $(this).val(),
+                name: $(this).data('name'),
+                price: parseFloat($(this).data('price')) // Ensure float
+            });
+        });
 
         const cartItem = {
-            product: state.currentProduct,
-            quantity: state.currentQty,
-            toppings: [...state.selectedToppings] // Clone array
+            id: app.currentProduct.id,
+            name: app.currentProduct.name,
+            price: parseFloat(app.currentProduct.price), // Ensure float
+            image_url: app.currentProduct.image_url,
+            quantity: parseInt(app.currentProduct.quantity),
+            toppings: selectedToppings
         };
 
-        state.cart.push(cartItem);
-        updateCartCount();
-        showToast('Item berhasil ditambahkan ke keranjang!', 'success');
-
-        // Hide Modal properly
-        const modalEl = document.getElementById('addToCartModal');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-    });
-
-    window.app.removeFromCart = function (index) {
-        state.cart.splice(index, 1);
+        app.cart.push(cartItem);
         renderCart();
-        updateCartCount();
+        
+        // Close Modal
+        $('#addToCartModal').addClass('hidden');
+        
+        // Animation feedback
+        const btn = $('#btn-process-order');
+        btn.addClass('animate-bounce');
+        setTimeout(() => btn.removeClass('animate-bounce'), 1000);
+
+        // Toast Notification for Mie Ayam
+        showNotification('Berhasil', 'Mie ayam telah ditambahkan ke keranjang!');
     }
 
-    window.app.updateCartQty = function (index, change) {
-        const item = state.cart[index];
-        const newQty = item.quantity + change;
-
-        if (newQty < 1) return; // Minimum 1
-        if (newQty > 99) return; // Max 99
-
-        item.quantity = newQty;
-        renderCart();
-    }
-
-    function updateCartCount() {
-        const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-        $('#cart-count').text(count);
-
-        // Animate badge
-        $('#cart-count').addClass('animate__pulse');
-        setTimeout(() => $('#cart-count').removeClass('animate__pulse'), 500);
-    }
-
-    function calculateItemSubtotal(item) {
-        const toppingTotal = item.toppings.reduce((sum, t) => sum + t.price, 0);
-        return (parseFloat(item.product.price) + toppingTotal) * item.quantity;
-    }
-
-    // ==========================================
-    // 6. ORDER SUBMISSION
-    // ==========================================
-
-    $('#btn-checkout').click(function () {
-        if (state.cart.length === 0) return;
-
-        // Validate Customer Name
-        const customerName = $('#customerName').val().trim();
+    function processOrder() {
+        const customerName = $('#sidebarCustomerName').val().trim();
+        
         if (!customerName) {
-            showToast('Mohon isi nama pemesan.', 'error');
-            $('#customerName').focus();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Nama Kosong',
+                text: 'Mohon isi nama pelanggan terlebih dahulu!',
+                confirmButtonColor: '#FFA726'
+            });
+            $('#sidebarCustomerName').focus();
             return;
         }
 
-        // Disable button & Show Loading
-        const btn = $(this);
+        if (app.cart.length === 0) return;
+
+        // Show loading state
+        const btn = $('#btn-process-order');
         const originalText = btn.html();
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Memproses...');
+        btn.prop('disabled', true).html('<i class="bi bi-arrow-repeat animate-spin"></i> Memproses...');
 
         // Prepare Payload
         const payload = {
             customer_name: customerName,
-            items: state.cart.map(item => ({
-                product_id: item.product.id,
+            items: app.cart.map(item => ({
+                product_id: item.id,
                 quantity: item.quantity,
                 toppings: item.toppings.map(t => t.id)
             }))
@@ -366,124 +566,150 @@ $(document).ready(function () {
             url: '/api/orders',
             method: 'POST',
             data: payload,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function (response) {
-                // Success Flow
-                $('#cartModal').modal('hide'); // Close Cart
-
+            success: function (res) {
                 // Show Success Modal
-                $('#success-order-number').text('#' + response.order_number);
-                new bootstrap.Modal('#successModal').show();
+                $('#success-order-number').text(`#${res.queue_number}`);
+                $('#successModal').removeClass('hidden');
 
-                // Start Countdown & Redirect
-                startSuccessCountdown();
-
-                state.cart = []; // Clear Cart
-                $('#customerName').val(''); // Clear Name
-                updateCartCount();
+                // Start Redirect Countdown
+                startRedirectCountdown();
             },
             error: function (xhr) {
-                console.error('Order Failed:', xhr);
-                const msg = xhr.responseJSON?.message || 'Gagal membuat pesanan.';
-                showToast(msg, 'error');
-
-                // Reset Button
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Terjadi kesalahan saat memproses pesanan.',
+                });
                 btn.prop('disabled', false).html(originalText);
             }
         });
-    });
+    }
 
-    function startSuccessCountdown() {
-        let count = 5;
+    function startRedirectCountdown() {
+        let seconds = 5;
+        const countdownEl = $('#countdown');
+        const progressEl = $('#redirect-progress');
+        
+        // Animate progress bar to 100% over 5s
+        progressEl.css('width', '100%');
+
         const interval = setInterval(() => {
-            count--;
-            $('#countdown').text(count);
-            if (count <= 0) {
+            seconds--;
+            countdownEl.text(seconds);
+
+            if (seconds <= 0) {
                 clearInterval(interval);
-                window.location.reload(); // Hard refresh to reset everything
+                
+                // Prevent browser from restoring scroll position
+                if ('scrollRestoration' in history) {
+                    history.scrollRestoration = 'manual';
+                }
+                
+                // Force reset scroll and redirect to Hero
+                window.scrollTo(0, 0);
+                window.location.href = '/';
             }
         }, 1000);
     }
 
     // ==========================================
-    // 7. UTILITIES
+    // 7. UTILS & EVENT LISTENERS
     // ==========================================
 
-    function formatPrice(price) {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(price).replace('Rp', 'Rp '); // Add space for readability
-    }
+    function setupEventListeners() {
+        // Start Shopping (Auto Scroll)
+        $('#btn-start-shopping').click(function(e) {
+            e.preventDefault();
+            startShoppingFlow();
+        });
 
-    function showToast(message, type = 'success') {
-        const toastEl = $('#liveToast');
-        toastEl.find('.toast-body span').text(message);
+        // Category Tabs
+        $('.category-btn').click(function() {
+            $('.category-btn').removeClass('active');
+            $(this).addClass('active');
+            app.currentCategory = $(this).data('category');
+            
+            // Animate transition
+            gsap.to('#products-container', {
+                opacity: 0,
+                y: 10,
+                duration: 0.2,
+                onComplete: () => {
+                    renderProducts();
+                    gsap.to('#products-container', {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.3
+                    });
+                }
+            });
+        });
 
-        // Adjust color based on type
-        if (type === 'error') {
-            toastEl.removeClass('bg-success').addClass('bg-danger');
-        } else {
-            toastEl.removeClass('bg-danger').addClass('bg-success');
-        }
+        // Modal Controls
+        $('.modal-close').click(function() {
+            $(this).closest('.modal-overlay').addClass('hidden');
+        });
 
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
-    }
+        $('.modal-overlay').click(function(e) {
+            if ($(e.target).hasClass('modal-overlay')) {
+                $(this).addClass('hidden');
+            }
+        });
 
-    // ==========================================
-    // 8. IDLE TIMER
-    // ==========================================
-    function resetIdleTimer() {
-        clearTimeout(state.idleTimer);
+        // Qty Controls in Modal
+        $('#qty-minus').click(function() {
+            if (app.currentProduct.quantity > 1) {
+                app.currentProduct.quantity--;
+                $('#modalQty').text(app.currentProduct.quantity);
+                updateModalSubtotal();
+            }
+        });
 
-        // Set new timer
-        state.idleTimer = setTimeout(() => {
-            // Check if modals are open to determine if we should warn or just reload
-            // Ideally, simple reload is enough for MVP kiosk
-            window.location.reload();
-        }, state.idleTimeLimit);
-    }
-
-    // ==========================================
-    // 9. EVENT BINDINGS (CONTROLS)
-    // ==========================================
-
-    // Quantity Controls in Modal
-    $('#qty-minus').click(function () {
-        if (state.currentQty > 1) {
-            state.currentQty--;
-            $('#modalQty').text(state.currentQty);
+        $('#qty-plus').click(function() {
+            const maxQty = $('#modalQty').data('max');
+            if (app.currentProduct.quantity >= maxQty) {
+                 showNotification('Stok Terbatas', `Hanya tersedia ${maxQty} item.`, 'warning');
+                 return;
+            }
+            app.currentProduct.quantity++;
+            $('#modalQty').text(app.currentProduct.quantity);
             updateModalSubtotal();
-        }
-    });
+        });
 
-    $('#qty-plus').click(function () {
-        if (state.currentQty < 99) {
-            state.currentQty++;
-            $('#modalQty').text(state.currentQty);
+        // Topping Checkbox Change
+        $('#toppingsList').on('change', 'input[type="checkbox"]', function() {
             updateModalSubtotal();
-        }
-    });
+        });
 
-    // Cart Modal Open
-    $('#cartModal').on('show.bs.modal', function () {
-        renderCart();
-    });
+        // Add to Cart
+        $('#btn-add-to-cart').click(addToCart);
 
-    // Tab Switching
-    $('#categoryTabs button').on('shown.bs.tab', function (event) {
-        const category = $(event.target).data('category');
-        fetchProducts(category);
-    });
+        // Process Order
+        $('#btn-process-order').click(processOrder);
+    }
 
-    // Initialize App
+    // Helper
+    function formatRupiah(amount) {
+        return 'Rp ' + new Intl.NumberFormat('id-ID').format(amount);
+    }
+
+    function showNotification(title, text, icon = 'success') {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+    }
+
+    // Run Init
     init();
-
 });
-
-// Expose functions globally for inline onclick handlers (cleaner than lots of standard listeners)
-window.app = window.app || {};

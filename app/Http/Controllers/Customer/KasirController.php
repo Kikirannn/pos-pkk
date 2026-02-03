@@ -29,12 +29,17 @@ class KasirController extends Controller
      */
     public function getProducts(Request $request): JsonResponse
     {
-        $query = Product::available();
+        // Start with all products query
+        $query = Product::query(); 
+        
+        // REMOVED available() scope to ensure all products are visible as requested
+        // $query->available(); 
 
         if ($request->has('category') && in_array($request->category, ['makanan', 'minuman'])) {
             $query->byCategory($request->category);
         }
 
+        // Remove pagination (get all) or increase limit if it was paginated
         $products = $query->get()->map(function ($product) {
             return [
                 'id' => $product->id,
@@ -44,6 +49,8 @@ class KasirController extends Controller
                 'formatted_price' => $product->formatted_price, // Accessor
                 'image_url' => $product->image_url,             // Accessor
                 'description' => $product->description,
+                'stock' => $product->stock,
+                'is_available' => $product->is_available,
             ];
         });
 
@@ -104,6 +111,17 @@ class KasirController extends Controller
                     continue;
 
                 $quantity = $itemData['quantity'];
+
+                // Stock Validation
+                if ($product->stock < $quantity) {
+                    throw new \Exception("Stok produk '{$product->name}' tidak mencukupi. Tersedia: {$product->stock}, Diminta: {$quantity}.");
+                }
+
+                // Decrement Stock
+                $product->decrement('stock', $quantity);
+                // Optional: Auto set unavailable if stock 0? 
+                // Let's keep it simple: just decrement. Frontend handles display based on stock.
+
                 $productPrice = $product->price;
 
                 // Create Order Item
@@ -147,6 +165,7 @@ class KasirController extends Controller
                 'success' => true,
                 'message' => 'Pesanan berhasil dibuat.',
                 'order_number' => $order->order_number,
+                'queue_number' => $order->queue_number,
                 'data' => $order
             ], 201);
 
